@@ -1,6 +1,9 @@
 (ns commodor64.core
   (:gen-class))
 
+(require '[clojure.set :refer [union]])
+(require '[clojure.string :refer [includes?]  ])
+
 (declare driver-loop)                     ; NO TOCAR
 (declare string-a-tokens)                 ; NO TOCAR
 (declare evaluar-linea)                   ; NO TOCAR
@@ -643,6 +646,23 @@
 ; A PARTIR DE ESTE PUNTO HAY QUE IMPLEMENTAR LAS FUNCIONES DADAS ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;Devuelve un set con los comandos del interprete
+(def comandos-interprete 
+    '#{LOAD, SAVE, RUN}
+)
+
+;Devuelve un set con las sentencias de commodor
+(def sentencias-commodor
+    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT}
+)
+
+(def operadores
+    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR}
+)
+
+(def palabras-reservadas
+  (union comandos-interprete sentencias-commodor operadores)
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; palabra-reservada?: predicado para determinar si un
 ; identificador es una palabra reservada, por ejemplo:
@@ -651,23 +671,8 @@
 ; user=> (palabra-reservada? 'SPACE)
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn palabra-reservada? [x](
-    cond (= x 'PRINT) true
-         (= x 'LOAD) true
-         (= x 'SAVE) true
-         (= x 'REM) true
-         (= x 'NEW) true
-         (= x 'RUN) true
-         (= x 'GOTO) true
-         (= x 'IF) true
-         (= x 'INPUT) true
-         (= x 'ON) true
-         (= x 'GOSUB) true
-         (= x 'RETURN) true
-         (= x 'FOR) true
-         (= x 'NEXT) true
-    :else false
-  )
+(defn palabra-reservada? [x]
+  (contains? palabras-reservadas x)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -680,7 +685,55 @@
 ; user=> (operador? (symbol "%"))
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn operador? [x]
+(defn operador? [x](
+    contains? operadores x
+  )
+)
+
+(defn alfanumerico? [x] (
+  every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (str x)
+  )
+)
+;Recibe dos simbolos y se fija si comparen los primeros dos caracteres
+(defn comparten-primeras-dos-caracteres? [x y](
+    = (take 2 (str x)) (take 2 (str y))
+  )
+)
+
+(defn no-empieza-con-palabra-reservada [x] (
+  not-any? (partial comparten-primeras-dos-caracteres? x) palabras-reservadas 
+  )
+)
+
+(defn subsimbolo? [simbolo subsimbolo](
+    includes? (str simbolo) (str subsimbolo)
+  )
+)
+
+(defn no-contiene-palabras-reservadas [x](
+  not-any? (partial subsimbolo? x) palabras-reservadas
+  )
+)
+
+(defn nombre-variable-valido? [x](
+    and
+        (alfanumerico? x)
+        (no-empieza-con-palabra-reservada x)
+        (no-contiene-palabras-reservadas x)
+  )
+)
+
+(defn simbolo-valido? [x](
+    cond
+      (palabra-reservada? x) true
+      (nombre-variable-valido? x) true
+    :else false
+  )
+)
+
+(defn reemplazar-simbolo-invalido [x](
+    if (simbolo-valido? x) x nil
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -689,7 +742,9 @@
 ; user=> (anular-invalidos '(IF X & * Y < 12 THEN LET ! X = 0))
 ; (IF X nil * Y < 12 THEN LET nil X = 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn anular-invalidos [sentencia]
+(defn anular-invalidos [sentencia] (
+  map reemplazar-simbolo-invalido sentencia
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
