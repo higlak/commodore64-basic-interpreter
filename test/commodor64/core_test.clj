@@ -2,6 +2,8 @@
   (:require [clojure.test :refer :all]
             [commodor64.core :refer :all]))
 
+;======================================================
+
 (deftest test-palabra-reservada
   (testing "Palabra reservada, true."
     (is (palabra-reservada? 'REM))))
@@ -67,6 +69,63 @@
   testing "Anular simbolos invalidos"
     (is 
       (= (anular-invalidos '(IF X & * Y < 12 THEN LET ! X = 0)) (concat '(IF X) '(nil) '(* Y < 12 THEN LET) '(nil) '(X = 0)))
+    )
+  )  
+)
+
+;======================================================
+
+(deftest test-cargar-linea(
+  testing "Se puede cargar una linea al entorno ."
+    (is 
+      ( =
+        (first(cargar-linea '(10 (PRINT X)) '[() [:ejecucion-inmediata 0] [] [] [] 0 {}]))
+        '((10 (PRINT X)))
+        )
+    )
+  )  
+)
+
+(deftest test-se-pueden-cargar-multiples-lineas(
+  testing "Se pueden cargar multiples lineas al entorno ."
+    (is 
+      ( =
+        (first(cargar-linea '(10 (PRINT Y)) '[((20 (PRINT X))) [:ejecucion-inmediata 0] [] [] [] 0 {}]))
+        '( (10 (PRINT Y))  (20 (PRINT X)))
+        )
+    )
+  )  
+)
+
+(deftest test-las-mayores-se-cargan-despues-de-las-menores(
+  testing "Las lineas mayores se cargan despues de las menores ."
+    (is 
+      ( =
+        (first(cargar-linea '(20 (PRINT Y)) '[((10 (PRINT X))) [:ejecucion-inmediata 0] [] [] [] 0 {}]))
+        '( (10 (PRINT X))  (20 (PRINT Y)))
+        )
+    )
+  )  
+)
+
+(deftest test-se-puede-cargar-en-el-medio(
+  testing "Se pueden cargar lineas en el medio."
+    (is 
+      ( =
+        (first(cargar-linea '(15 (Z = 150)) '[((10 (X = 100)) (20 (Y = 200)) ) (5,4)]))
+        '( (10 (X = 100)) (15 (Z = 150)) (20 (Y = 200)))
+        )
+    )
+  )  
+)
+
+(deftest test-si-se-carga-la-misma-linea-se-pisa(
+  testing "Si se carga la misma linea se pisa."
+    (is 
+      ( =
+        (first(cargar-linea '(10 (Z = 150)) '[((10 (X = 100)) (20 (Y = 200)) ) (5,4)]))
+        '( (10 (Z = 150)) (20 (Y = 200)))
+        )
     )
   )  
 )

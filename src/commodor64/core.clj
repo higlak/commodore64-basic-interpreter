@@ -747,6 +747,18 @@
   )
 )
 
+(defn cargar-linea-ordenado [linea lista](
+    cond 
+      (empty? lista) (list linea)
+      (> (first linea) (first(first lista))) 
+        (cons (first lista) (cargar-linea-ordenado linea (rest lista)))
+      (< (first linea) (first(first lista)))
+        (cons linea lista)
+    :else 
+      (cons linea (rest lista))
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; cargar-linea: recibe una linea de codigo y un ambiente y retorna
 ; el ambiente actualizado, por ejemplo:
@@ -759,8 +771,12 @@
 ; user=> (cargar-linea '(15 (X = X - 1)) ['((10 (PRINT X)) (15 (X = X + 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}])
 ; [((10 (PRINT X)) (15 (X = X - 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn cargar-linea [linea amb]
+
+(defn cargar-linea [linea amb](
+    vec(cons (cargar-linea-ordenado linea (first amb)) (next amb))
+  )
 )
+;(println (cargar-linea '(1,2,3) '[() (5,4)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; expandir-nexts: recibe una lista de sentencias y la devuelve con
