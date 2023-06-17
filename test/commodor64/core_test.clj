@@ -129,3 +129,27 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest expandir-next-simple(
+  testing "Se puede subdividir dos next simples"
+    (is 
+      ( =
+        (expandir-next (list 'NEXT 'A (symbol ",") 'B))
+        '((NEXT A) (NEXT B))
+        )
+    )
+  )  
+)
+
+(deftest expandir-next-complejos(
+  testing "Se puede expandir los next y el resto queda igual"
+    (is 
+      ( =
+        (expandir-nexts(list '(PRINT 1) (list 'NEXT 'A (symbol ",") 'B)))
+        '((PRINT 1) (NEXT A) (NEXT B))
+        )
+    )
+  )  
+)

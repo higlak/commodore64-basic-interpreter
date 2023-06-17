@@ -776,7 +776,17 @@
     vec(cons (cargar-linea-ordenado linea (first amb)) (next amb))
   )
 )
-;(println (cargar-linea '(1,2,3) '[() (5,4)]))
+
+(defn expandir-next [n](
+    if (= (first n) 'NEXT)
+      (partition 2 (replace {(symbol ","), 'NEXT} n))
+      n
+  )
+)
+
+(defn expandir-next-2-elemetnos [a b]
+  (cons (expandir-next a) (expandir-next b))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; expandir-nexts: recibe una lista de sentencias y la devuelve con
@@ -789,7 +799,9 @@
 ; user=> (expandir-nexts n)
 ; ((PRINT 1) (NEXT A) (NEXT B))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn expandir-nexts [n]
+(defn expandir-nexts [n](
+    reduce expandir-next-2-elemetnos n
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
