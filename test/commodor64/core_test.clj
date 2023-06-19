@@ -196,12 +196,30 @@
 
 ;======================================================
 
-;(deftest test-contar-sentencias-simple(
-;  testing "Se cuenta bien la cantidad de sentencias"
-;    (is (
-;        = 2 (contar-sentencias 10 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
-;      )
-;    )
-;  )  
-;)
+(deftest test-contar-sentencias-simple(
+  testing "Se cuenta bien la cantidad de sentencias"
+    (is (
+        = 1 (contar-sentencias 15 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+(deftest test-contar-sentencias-multiples-sentencias(
+  testing "Se cuenta bien la cantidad de sentencias"
+    (is (
+        = 2 (contar-sentencias 10 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+(deftest test-contar-sentencias-con-expansion-de-next(
+  testing "Se cuenta bien la cantidad de sentencias con expansion de next"
+    (is (
+        = 2 (contar-sentencias 20 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
 

@@ -896,6 +896,15 @@
   )
 )
 
+(defn obtener-linea [nro-linea sentencias](
+   first(filter (comp (partial = nro-linea) first) sentencias)
+  )
+)
+
+(defn expandir-nexts-de-linea [linea](
+    cons (first linea) (expandir-nexts (rest linea))
+  )
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; contar-sentencias: recibe un numero de linea y un ambiente y
 ; retorna la cantidad de sentencias que hay en la linea indicada,
@@ -908,7 +917,7 @@
 ; 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn contar-sentencias [nro-linea amb](
-    dec(count(map expandir-nexts (first amb)))
+    dec(count (expandir-nexts-de-linea (obtener-linea nro-linea (first amb))))
   )
 )
 
