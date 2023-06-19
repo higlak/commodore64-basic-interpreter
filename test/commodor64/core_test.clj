@@ -154,6 +154,17 @@
   )  
 )
 
+(deftest test-expandir-next-mas-sentencias(
+  testing "Se puede expandir los next y los parentesis quedan bien"
+    (is 
+      ( =
+        (expandir-nexts(list '(PRINT 1) '(PRINT 2) (list 'NEXT 'A (symbol ",") 'B)))
+        '((PRINT 1) (PRINT 2) (NEXT A) (NEXT B))
+        )
+    )
+  )  
+)
+
 ;======================================================
 
 (deftest test-tipo-de-variable-float(
@@ -182,3 +193,15 @@
     )
   )  
 )
+
+;======================================================
+
+;(deftest test-contar-sentencias-simple(
+;  testing "Se cuenta bien la cantidad de sentencias"
+;    (is (
+;        = 2 (contar-sentencias 10 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
+;      )
+;    )
+;  )  
+;)
+

@@ -656,13 +656,16 @@
     '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT}
 )
 
+;Devuelve un set con los operadores de commodor
 (def operadores
     '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR}
 )
 
+;Devuelve un set de las palabras reservadas
 (def palabras-reservadas
   (union comandos-interprete sentencias-commodor operadores)
 )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; palabra-reservada?: predicado para determinar si un
 ; identificador es una palabra reservada, por ejemplo:
@@ -700,6 +703,7 @@
   )
 )
 
+;Devuelve true si el simbolo no empieza con los primeros 2 caracteres de una palabra reservada
 (defn no-empieza-con-palabra-reservada [x] (
   not-any? (partial comparten-primeras-dos-caracteres? x) palabras-reservadas 
   )
@@ -710,6 +714,7 @@
   )
 )
 
+;Devuelve true si un simbolo no contiene palabras reservadas
 (defn no-contiene-palabras-reservadas [x](
   not-any? (partial subsimbolo? x) palabras-reservadas
   )
@@ -747,6 +752,7 @@
   )
 )
 
+;Carga una linea en la posicion ordenada segun el numero de linea
 (defn cargar-linea-ordenado [linea lista](
     cond 
       (empty? lista) (list linea)
@@ -771,7 +777,6 @@
 ; user=> (cargar-linea '(15 (X = X - 1)) ['((10 (PRINT X)) (15 (X = X + 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}])
 ; [((10 (PRINT X)) (15 (X = X - 1)) (20 (X = 100))) [:ejecucion-inmediata 0] [] [] [] 0 {}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defn cargar-linea [linea amb](
     vec(cons (cargar-linea-ordenado linea (first amb)) (next amb))
   )
@@ -780,12 +785,8 @@
 (defn expandir-next [n](
     if (= (first n) 'NEXT)
       (partition 2 (replace {(symbol ","), 'NEXT} n))
-      n
+      (list n)
   )
-)
-
-(defn expandir-next-2-elemetnos [a b]
-  (cons (expandir-next a) (expandir-next b))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -800,10 +801,11 @@
 ; ((PRINT 1) (NEXT A) (NEXT B))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn expandir-nexts [n](
-    reduce expandir-next-2-elemetnos n
+    reduce concat (map expandir-next n)
   )
 )
 
+;Si recibe un codigo de error obtiene el mensaje, si recibe un mensaje lo devuelve
 (defn get-error-msg [msg](
     if (number? msg)
       (buscar-mensaje msg)
@@ -811,6 +813,7 @@
   )
 )
 
+;Si se tiene la linea, devuelve un string de la forma " IN 100"
 (defn get-error-line [prog-ptrs](
    if (number? (first prog-ptrs))
       (str " IN " (first prog-ptrs))
@@ -904,7 +907,9 @@
 ; user=> (contar-sentencias 20 [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 1] [] [] [] 0 {}])
 ; 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn contar-sentencias [nro-linea amb]
+(defn contar-sentencias [nro-linea amb](
+    dec(count(map expandir-nexts (first amb)))
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
