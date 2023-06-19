@@ -842,6 +842,12 @@
   nil
 )
 
+;recibe un simbolo y verifica si su ultimo caracter es igual a x
+(defn simbolo-termina-con[x simbolo](
+    = (last (str simbolo)) (first (str x))
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-float?: predicado para determinar si un identificador
 ; es una variable de punto flotante, por ejemplo:
@@ -852,7 +858,9 @@
 ; user=> (variable-float? 'X$)
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn variable-float? [x]
+(defn variable-float? [x](
+    and (not (variable-integer? x)) (not (variable-string? x))
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -865,7 +873,9 @@
 ; user=> (variable-integer? 'X$)
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn variable-integer? [x]
+(defn variable-integer? [x](
+    simbolo-termina-con '% x
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -878,7 +888,9 @@
 ; user=> (variable-string? 'X%)
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn variable-string? [x]
+(defn variable-string? [x](
+    simbolo-termina-con '$ x
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

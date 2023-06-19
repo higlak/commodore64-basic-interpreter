@@ -132,7 +132,7 @@
 
 ;======================================================
 
-(deftest expandir-next-simple(
+(deftest test-expandir-next-simple(
   testing "Se puede subdividir dos next simples"
     (is 
       ( =
@@ -143,13 +143,42 @@
   )  
 )
 
-(deftest expandir-next-complejos(
+(deftest test-expandir-next-complejos(
   testing "Se puede expandir los next y el resto queda igual"
     (is 
       ( =
         (expandir-nexts(list '(PRINT 1) (list 'NEXT 'A (symbol ",") 'B)))
         '((PRINT 1) (NEXT A) (NEXT B))
         )
+    )
+  )  
+)
+
+;======================================================
+
+(deftest test-tipo-de-variable-float(
+  testing "La variable es de tipo float"
+    (is (
+        and (variable-float? 'X) (not(variable-integer? 'X)) (not(variable-string? 'X))
+      )
+    )
+  )  
+)
+
+(deftest test-tipo-de-variable-integer(
+  testing "La variable es de tipo integer"
+    (is (
+        and (not(variable-float? 'X%)) (variable-integer? 'X%) (not(variable-string? 'X%))
+      )
+    )
+  )  
+)
+
+(deftest test-tipo-de-variable-string(
+  testing "La variable es de tipo string"
+    (is (
+        and (not(variable-float? 'X$)) (not(variable-integer? 'X$)) (variable-string? 'X$)
+      )
     )
   )  
 )
