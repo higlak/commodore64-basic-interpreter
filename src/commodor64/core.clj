@@ -804,6 +804,20 @@
   )
 )
 
+(defn get-error-msg [msg](
+    if (number? msg)
+      (buscar-mensaje msg)
+      msg
+  )
+)
+
+(defn get-error-line [prog-ptrs](
+   if (number? (first prog-ptrs))
+      (str " IN " (first prog-ptrs))
+      nil
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; dar-error: recibe un error (codigo o mensaje) y el puntero de 
 ; programa, muestra el error correspondiente y retorna nil, por
@@ -821,7 +835,11 @@
 ;
 ; ?ERROR DISK FULL IN 100nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn dar-error [cod prog-ptrs]
+(defn dar-error [cod prog-ptrs](
+    println 
+      (str (get-error-msg cod) (get-error-line prog-ptrs))
+  )
+  nil
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
