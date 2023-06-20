@@ -953,8 +953,29 @@
 ; user=> (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [25 0] [] [] [] 0 {}])
 ; nil
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(defn buscar-lineas-restantes
-;)
+(defn buscar-lineas-restantes-rec [sentencias linea pos](
+    cond 
+      (empty? sentencias) nil
+      (< (first(first sentencias)) linea) 
+        (buscar-lineas-restantes-rec (next sentencias) linea pos)
+      (> (first(first sentencias)) linea)
+        nil
+    :else
+      (cons 
+        (cons linea (take-last pos (expandir-nexts(next (first sentencias)))))
+        (next sentencias))
+  )
+)
+
+(defn buscar-lineas-restantes [amb](
+    cond 
+      (empty? (first amb)) nil
+      (empty? (nth amb 1)) nil
+      (not (number? (first(nth amb 1)))) nil
+    :else
+      (buscar-lineas-restantes-rec (first amb) (first (nth amb 1)) (last (nth amb 1)))
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; continuar-linea: implementa la sentencia RETURN, retornando una

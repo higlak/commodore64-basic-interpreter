@@ -223,3 +223,83 @@
   )  
 )
 
+;======================================================
+
+(deftest test-buscar-lineas-restantes-faltan-todas(
+  testing "Se obtienen bien las lineas restantes cuando faltan todas"
+    (is (
+        = (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [10 2] [] [] [] 0 {}])
+          (list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J)))
+      )
+    )
+  )  
+)
+
+
+(deftest test-buscar-lineas-restantes-algunas-sentencias-realizadas(
+  testing "Se obtienen bien las lineas restantes cuando se realizaron algunas sentencias "
+    (is (
+        = (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [15 0] [] [] [] 0 {}])
+          (list '(15) (list 20 (list 'NEXT 'I (symbol ",") 'J)))
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-expande-nexts-de-la-linea-actual(
+  testing "Se obtienen bien las lineas restantes cuando la linea actual tiene nexts"
+    (is (
+        = (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 1] [] [] [] 0 {}])
+           '((20 (NEXT J)))
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-cantidad-negativa-de-sentencias-restantes(
+  testing "Se obtienen bien las lineas restantes cuando hay una cantidad negativa de sentencias restantes"
+    (is (
+        = (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 -1] [] [] [] 0 {}])
+           '((20))
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-si-la-linea-no-existe-devuelve-nil(
+  testing "Se devuelve nil cuando la linea no existe"
+    (is (
+        nil? (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [17 2] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-si-la-linea-se-va-de-rango-devuelve-nil(
+  testing "Se devuelve nil cuando la linea se va de rango"
+    (is (
+        nil? (buscar-lineas-restantes [(list '(10 (PRINT X) (PRINT Y)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [25 2] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-si-no-hay-lineas-restantes-devuelve-nil(
+  testing "Se devuelve nil cuando no hay lineas restantes"
+    (is (
+        nil? (buscar-lineas-restantes [() [20 1] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+(deftest test-buscar-lineas-restantes-devuelve-nil-si-es-ejecucion-inmediata(
+  testing "Se devuelve nil cuando es ejecucion inmediata"
+    (is (
+        nil? (buscar-lineas-restantes ['((PRINT X) (PRINT Y)) [:ejecucion-inmediata 2] [] [] [] 0 {}])
+      )
+    )
+  )  
+)
+
+;======================================================
