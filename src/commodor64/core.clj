@@ -921,6 +921,11 @@
   )
 )
 
+(defn prg-ptr[amb](
+    nth amb 1
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; buscar-lineas-restantes: recibe un ambiente y retorna la
 ; representacion intermedia del programa a partir del puntero de
@@ -973,7 +978,27 @@
       (empty? (nth amb 1)) nil
       (not (number? (first(nth amb 1)))) nil
     :else
-      (buscar-lineas-restantes-rec (first amb) (first (nth amb 1)) (last (nth amb 1)))
+      (buscar-lineas-restantes-rec (first amb) (first (prg-ptr amb)) (last (prg-ptr amb)))
+  )
+)
+
+(defn stack [amb](
+    nth amb 2                
+  )
+)
+
+(defn top-stack [amb](
+    last (stack amb)
+  )
+)
+
+(defn pop-stack [amb](
+    assoc amb 2 (vec (drop-last (stack amb)))
+  )
+)
+
+(defn retornar-dec-tope-stack [amb](
+    assoc (pop-stack amb) 1 (assoc (top-stack amb) 1 (dec(last(top-stack amb))))
   )
 )
 
@@ -988,7 +1013,11 @@
 ; user=> (continuar-linea [(list '(10 (PRINT X)) '(15 (GOSUB 100) (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [[15 2]] [] [] 0 {}])
 ; [:omitir-restante [((10 (PRINT X)) (15 (GOSUB 100) (X = X + 1)) (20 (NEXT I , J))) [15 1] [] [] [] 0 {}]]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn continuar-linea [amb]
+(defn continuar-linea [amb](
+    if (empty? (nth amb 2))
+      (vec (list(dar-error 22 (prg-ptr amb)) amb))
+      (vec (list :omitir-restante (retornar-dec-tope-stack amb)))
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

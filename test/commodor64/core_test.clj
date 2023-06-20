@@ -303,3 +303,23 @@
 )
 
 ;======================================================
+
+(deftest test-continuar-linea-stack-vacio(
+  testing "Falla y devuelve nill con un entorno si el stack esta vacio"
+    (is (
+        = (continuar-linea [(list '(10 (PRINT X)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [] [] [] 0 {}])
+          [nil, [(list '(10 (PRINT X)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [] [] [] 0 {}]]
+      )
+    )
+  )  
+)
+
+(deftest test-continuar-linea(
+  testing "Devuelve una dupla, con :omitir-restante y el entorno, con "
+    (is (
+        = (continuar-linea [(list '(10 (PRINT X)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [20 3] [[15 2]] [] [] 0 {}])
+          [:omitir-restante, [(list '(10 (PRINT X)) '(15 (X = X + 1)) (list 20 (list 'NEXT 'I (symbol ",") 'J))) [15 1] [] [] [] 0 {}]]
+      )
+    )
+  )  
+)
