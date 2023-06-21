@@ -323,3 +323,60 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-extraer-no-hay-data-para-extraer(
+  testing "No se extrae data cuando no hay data para extraer"
+    (is (
+        = (extraer-data '(())) '()
+      )
+    )
+  )  
+)
+
+(deftest test-extraer-sentencia-data-simple(
+  testing "Se extrae la data de una sentencia simple"
+    (is (
+        = (extraer-data (list '(10 (DATA 5))) ) '(5)
+      )
+    )
+  )  
+)
+
+(deftest test-extraer-data-multiples-datos-en-sentencia(
+  testing "Se extrae la data de una sentencia con multiples datos"
+    (is (
+        = (extraer-data (list '(10 (DATA 5 , 10))) ) '(5 10)
+      )
+    )
+  )  
+)
+
+(deftest test-extraer-data-multiples-lineas(
+  testing "Se extrae la data de multiples lineas"
+    (is (
+        = (extraer-data (list '(5 (DATA 1)) '(10 (DATA 5 , 10))) ) '(1 5 10)
+      )
+    )
+  )  
+)
+
+(deftest test-extraer-sentencia-data-tipo-string(
+  testing "Se extrae la data y es de tipo string"
+    (is (
+        string? (first(extraer-data (list '(10 (DATA HOLA)))))
+      )
+    )
+  )  
+)
+
+(deftest test-extraer-data-se-ignora-rem(
+  testing "Se extrae la data ignorando los comentarios"
+    (is (
+        = (extraer-data (list '(10 (PRINT X) (REM ESTE NO) (DATA 30)) '(20 (DATA HOLA)) (list 100 (list 'DATA 'MUNDO (symbol ",") 10 (symbol ",") 20))))
+          '("HOLA" "MUNDO" 10 20)
+      )
+    )
+  )  
+)

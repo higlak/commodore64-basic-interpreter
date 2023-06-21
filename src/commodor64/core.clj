@@ -1020,6 +1020,42 @@
   )
 )
 
+(defn dato? [x](
+    and (not (= 'DATA x)) (not (= (symbol ",") x))
+  )
+)
+
+;Devuelve los datos de una sentencia
+(defn extraer-data-sentencia [sentencia](
+    filter dato? sentencia
+  )
+)
+
+;Devuelve la data de una lista de sentencias expresada en simbolos
+(defn extraer-data-sentencias [sentencias](
+    cond 
+      (empty? sentencias) sentencias
+      (= (first(first sentencias)) 'DATA)
+        (cons (extraer-data-sentencia (first sentencias)) (extraer-data-sentencias (rest sentencias)))
+      (= (first(first sentencias)) 'REM)
+        '()
+    :else
+      (extraer-data-sentencias (rest sentencias))
+  )
+)
+
+(defn procesar-tipo-dato [dato](
+    if (number? dato)
+      dato
+      (str dato)
+  )
+)
+
+(defn procesar-tipo-data [data](
+    map procesar-tipo-dato data
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; extraer-data: recibe la representación intermedia de un programa
 ; y retorna una lista con todos los valores embebidos en las
@@ -1029,7 +1065,9 @@
 ; user=> (extraer-data (list '(10 (PRINT X) (REM ESTE NO) (DATA 30)) '(20 (DATA HOLA)) (list 100 (list 'DATA 'MUNDO (symbol ",") 10 (symbol ",") 20))))
 ; ("HOLA" "MUNDO" 10 20)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn extraer-data [prg]
+(defn extraer-data [prg](
+    procesar-tipo-data (flatten (map (comp extraer-data-sentencias rest) prg))
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
