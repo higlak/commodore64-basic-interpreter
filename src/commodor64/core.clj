@@ -1086,6 +1086,16 @@
 (defn ejecutar-asignacion [sentencia amb]
 )
 
+(defn reemplazar-simbolo [variables, simbolo](
+    if (not (palabra-reservada? simbolo))
+      (if (variable-string? simbolo)
+        (get variables simbolo "") 
+        (get variables simbolo 0) 
+      )
+      simbolo
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; preprocesar-expresion: recibe una expresion y la retorna con
 ; las variables reemplazadas por sus valores y el punto por el
@@ -1095,7 +1105,9 @@
 ; user=> (preprocesar-expresion '(X + . / Y% * Z) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 5 Y% 2}])
 ; (5 + 0 / 2 * 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn preprocesar-expresion [expr amb]
+(defn preprocesar-expresion [expr amb](
+    map (partial reemplazar-simbolo (assoc (last amb) '. 0)) expr
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

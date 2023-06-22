@@ -380,3 +380,45 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-preprocesar-expresion-reemplazo-valores(
+  testing "Se reemplazan las variables por sus valores"
+    (is (
+        = (preprocesar-expresion '(X$ + Z$) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA" Z$ "MUNDO"}])
+          '("HOLA" + "MUNDO")
+      )
+    )
+  )  
+)
+
+(deftest test-preprocesar-expresion-se-reemplazan-los-puntos(
+  testing "Se reemplazan los . por 0"
+    (is (
+        = (preprocesar-expresion '(X$ + Z$ + .) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA" Z$ "MUNDO"}])
+          '("HOLA" + "MUNDO" + 0)
+      )
+    )
+  )  
+)
+
+(deftest test-preprocesar-expresion-variable-string-no-definida-se-reemplaza(
+  testing "Se reemplazan las variablkes de tipo string no definida ppr """
+    (is (
+        = (preprocesar-expresion '(X$ + Z$ + .) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA" }])
+          '("HOLA" + "" + 0)
+      )
+    )
+  )  
+)
+
+(deftest test-preprocesar-expresion-variable-no-string-no-definida-se-reemplaza(
+  testing "Se reemplazan las variables no definidas int y float por 0"
+    (is (
+        = (preprocesar-expresion '(X$ + Z$ + .) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA" }])
+          '("HOLA" + "" + 0)
+      )
+    )
+  )  
+)
