@@ -422,3 +422,15 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-desambiguar(
+  testing "Se desambiguan los mas menos y MID$"
+    (is (
+        = (desambiguar (list 'MID$ (symbol "(") 1 (symbol ",") '- 2 '+ 'K (symbol ",") 3 (symbol ")")))
+          (list 'MID3$ (symbol "(") 1 (symbol ",") '-u 2 '+ 'K (symbol ",") 3 (symbol ")"))
+      )
+    )
+  )  
+)
