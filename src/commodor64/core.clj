@@ -658,7 +658,7 @@
 
 ;Devuelve un set con los operadores de commodor
 (def operadores
-    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR}
+    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP}
 )
 
 ;Devuelve un set de las palabras reservadas
@@ -1142,7 +1142,18 @@
 ; user=> (precedencia 'MID$)
 ; 8
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn precedencia [token]
+(defn precedencia [token](
+    cond 
+      (= 'OR token) 1
+      (= 'AND token) 2
+      (= 'NOT token) 3
+      (some (partial = token) '[= <> < <= > >=]) 4
+      (some (partial = token) '[- +]) 5
+      (some (partial = token) '[* /]) 6
+      (= '-u token) 7
+      (some (partial = token) '[MID$ EXP]) 8
+      :else nil
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

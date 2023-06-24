@@ -434,3 +434,35 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-yunting-yard-precedencia-simple(
+  testing "Se obtiene bien la RPN en un ejemplo simple"
+    (is (
+        = (shunting-yard '(1 + 2))
+        '(1 2 +)
+      )
+    )
+  )  
+)
+
+(deftest test-yunting-yard-precedencia-multiples-niveles-de-precedencia(
+  testing "Se obtiene bien la RPN en un ejemplo con multiples niveles de precedencia"
+    (is (
+        = (shunting-yard '(1 + 2 / 2 EXP 3))
+        '(1 2 2 3 EXP / +)
+      )
+    )
+  )  
+)
+
+(deftest test-yunting-yard-precedencia-con-parentesis(
+  testing "Se obtiene bien la RPN en un ejemplo con multiples niveles de precedencia"
+    (is (
+        = (shunting-yard (list '1 '+ (symbol "(") '2 '/ '2 (symbol ")") 'EXP '3))
+        '(1 2 2 / 3 EXP +)
+      )
+    )
+  )  
+)
