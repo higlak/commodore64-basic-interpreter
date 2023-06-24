@@ -466,3 +466,35 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-elimnar-cero-decimal-elimina-los-ceros-finales(
+  testing "Se elimina el cero sin eliminar los demas decimales"
+    (is (
+        = (eliminar-cero-decimal 1.50)
+        1.5
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-decimal-no-quedan-decimales(
+  testing "Se elimina el cero y el punto cuando no quedan mas decimales"
+    (is (
+        = (eliminar-cero-decimal 1.0)
+        1
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-decimal-no-se-elimina-el-0(
+  testing "No se elimina el numero 0"
+    (is (
+        = (eliminar-cero-decimal 0)
+        0
+      )
+    )
+  )  
+)

@@ -1170,7 +1170,27 @@
 ; user=> (aridad 'MID3$)
 ; 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn aridad [token]
+(defn aridad [token](
+    cond
+      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$]) 1
+      (some (partial = token) '[MID$ + - * / = <> < <= > >= AND OR]) 2 
+      (= 'MID3$ token)3
+    :else 0
+  )
+)
+
+;Recibe una secuencia y elimina todos los 0s de la misma a la izquierda
+(defn eliminar-ceros-a-izquierda [secuencia](
+    drop-while (partial = (first "0")) (seq secuencia)
+  )
+)
+
+;Si la secuencia termina en . lo elimina
+(defn eliminar-punto-final [secuencia](
+    if (= (last secuencia) (first "."))
+      (drop-last secuencia)
+      secuencia
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1185,7 +1205,13 @@
 ; user=> (eliminar-cero-decimal 'A)
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn eliminar-cero-decimal [n]
+(defn eliminar-cero-decimal [n](
+    if (subsimbolo? n '.)
+      (read-string(str(apply str(
+        eliminar-punto-final (reverse (eliminar-ceros-a-izquierda (reverse (str n))))
+      ))))
+     n   
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
