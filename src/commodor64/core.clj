@@ -517,6 +517,7 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
+  (println sentencia)
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
       (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error  
       (case (first sentencia)
@@ -525,6 +526,7 @@
                        [nil amb]
                        [:sin-errores amb]))
         LOAD (if (= (first (amb 1)) :ejecucion-inmediata)
+                  
                  (let [nuevo-amb (cargar-arch (apply str (next sentencia)) (amb 1))]
                       (if (nil? nuevo-amb)
                           [nil amb]
@@ -658,7 +660,7 @@
 
 ;Devuelve un set con los operadores de commodor
 (def operadores
-    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP}
+    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, .}
 )
 
 ;Devuelve un set de las palabras reservadas
@@ -693,17 +695,32 @@
   )
 )
 
-(defn alfanumerico? [x] (
-  if (or (variable-string? x) (variable-integer? x)) 
-    (every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (drop-last (str x)))
-    (every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (str x))
+(defn caracter-es-letra? [caracter](
+    or
+      (and (>= (int caracter) 65) (<= (int caracter) 90)) 
+      (and (>= (int caracter) 97) (<= (int caracter) 122))
   )
 )
 
-(defn empiesa-con-letra [simbolo](
-    Character/isLetter (first (str simbolo))
+(defn caracter-es-numero? [caracter]
+    (and (>= (int caracter) 48) (< (int caracter) 57))  
+  
+)
+
+(defn caracter-alfanumerico? [caracter](
+    or 
+      (caracter-es-numero? caracter)
+      (caracter-es-letra? caracter)
   )
 )
+
+(defn variable-alfanumerica? [x] (
+  if (or (variable-string? x) (variable-integer? x)) 
+    (every? caracter-alfanumerico? (drop-last (str x)))
+    (every? caracter-alfanumerico? (str x))
+  )
+)
+
 
 (defn subsimbolo? [simbolo subsimbolo](
     includes? (str simbolo) (str subsimbolo)
@@ -718,8 +735,8 @@
 
 (defn nombre-variable-valido? [x](
     and
-        (empiesa-con-letra x)
-        (alfanumerico? x)
+        (caracter-es-letra? (first (str x)))
+        (variable-alfanumerica? x)
         (no-contiene-palabras-reservadas x)
   )
 )
@@ -1099,17 +1116,17 @@
   )
 )
 
-(defn reemplazar-variables [variables, x](
+(defn reemplazar-variables [variables, token](
     cond 
-      (not (symbol? x)) x
-      (= x '.) 0
+      (not (symbol? token)) token
+      (= token '.) 0
     :else
-      (if (nombre-variable-valido? x)
-        (if (variable-string? x)
-          (get variables x "") 
-          (get variables x 0) 
+      (if (nombre-variable-valido? token)
+        (if (variable-string? token)
+          (get variables token "") 
+          (get variables token 0) 
         )
-        x
+        token
       )
   )
 )
@@ -1190,7 +1207,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aridad [token](
     cond
-      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$]) 1
+      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD]) 1
       (some (partial = token) '[MID$ + - * / = <> < <= > >= AND OR]) 2 
       (= 'MID3$ token)3
     :else 0
@@ -1272,14 +1289,14 @@
       (str n)
   )
 )
-true
+
 
 (def ambiente ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}])
 (def expresion '(X + 2))
 
-;(calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))le
-
 (defn -main []
+
+  (driver-loop)
 
   (println (obtener-parte-representativa-de-variable 'HOLA))
   (println (obtener-parte-representativa-de-variable 'HOLA%))
