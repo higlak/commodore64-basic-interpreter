@@ -36,15 +36,7 @@
 (deftest test-simbolo-invalido-no-alfanumerico(
   testing "Simbolo no alfanumerico."
     (is 
-      (not(simbolo-valido? '$*))
-    )
-  )  
-)
-
-(deftest test-simbolo-invalido-empieza-con-palabra-privilegiada(
-  testing "Simbolo empieza con RU"
-    (is 
-      (not(simbolo-valido? 'RUCULA))
+      (not(simbolo-valido? '@*))
     )
   )  
 )
@@ -57,10 +49,18 @@
   )  
 )
 
-(deftest test-simbolo-valido-palabra-reservada(
+(deftest test-simbolo-valido-palabra-cumple-reglas-nombre(
   testing "Simbolo valido, cumple con reglas de nombre."
     (is 
       (simbolo-valido? 'VAR)
+    )
+  )  
+)
+
+(deftest test-simbolo-valido-con-tipo(
+  testing "Simbolo valido, cumple con reglas de nombre, e indica tipo."
+    (is 
+      (simbolo-valido? 'VAR%)
     )
   )  
 )
@@ -423,6 +423,26 @@
   )  
 )
 
+(deftest test-preprocesar-expresion-variable-no-string-se-reemplaza(
+  testing "Se reemplazan las variables no string"
+    (is (
+        = (preprocesar-expresion '(Z + .) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{Z 5}])
+          '(5 + 0)
+      )
+    )
+  )  
+)
+
+(deftest test-preprocesar-expresion-variable-no-se-reemplazan-los-literales(
+  testing "No se reemplazan los literales"
+    (is (
+        = (preprocesar-expresion '(Z + 2 + "HOLA") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{Z 5}])
+          '(5 + 2 + "HOLA")
+      )
+    )
+  )  
+)
+
 ;======================================================
 
 (deftest test-desambiguar(
@@ -498,3 +518,150 @@
     )
   )  
 )
+
+;======================================================
+
+(deftest test-elimnar-cero-entero-numero-natural(
+  testing "Devuelve el mismo numero natural con un espacio"
+    (is (
+        = (eliminar-cero-entero 1)
+        " 1"
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-entero-numero-entero(
+  testing "Devuelve el mismo numero entero "
+    (is (
+        = (eliminar-cero-entero -1)
+        "-1"
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-entero-numero-decimal(
+  testing "Devuelve el decimal sin el 0 a izquierda"
+    (is (
+        = (eliminar-cero-entero 0.5)
+        " .5"
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-entero-numero-decimal-negativo(
+  testing "Devuelve el decimal sin el 0 a izquierda"
+    (is (
+        = (eliminar-cero-entero -0.5)
+        "-.5"
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-entero-0(
+  testing "Funciona correctamente para 0"
+    (is (
+        = (eliminar-cero-entero 0)
+        " 0"
+      )
+    )
+  )  
+)
+
+(deftest test-elimnar-cero-entero-no-numerico(
+  testing "Funciona correctamente para 0"
+    (is (
+        = (eliminar-cero-entero 'HOLA)
+        "HOLA"
+      )
+    )
+  )  
+)
+
+;======================================================
+
+(deftest test-ejecutar-asignacion-simple(
+  testing "Se asigna una varibale al ambiente"
+    (is (
+        = (ejecutar-asignacion '(X = 5) ['((10 (PRINT X))) [10 1] [] [] [] 0 {}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 5}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-pisando(
+  testing "Se ya estaba la variable que se quiere asignar pisa el valor anterior"
+    (is (
+        = (ejecutar-asignacion '(X = 5) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 5}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-solo-guarda-los-primeros-dos-caracteres-delnombre(
+  testing "Solo se guardan los primeros dos caracteres"
+    (is (
+        = (ejecutar-asignacion '(HOLA = 5) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{HO 5}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-ademas-guarda-tipos-explicitos(
+  testing "Solo se guardan los primeros dos caracteres y los tipos explicitos"
+    (is (
+        = (ejecutar-asignacion '(HOLA% = 5) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{HO% 5}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-se-realizan-calculos-numericos(
+  testing "Se asigna el resultado de calcular la expresion de la derecha"
+    (is (
+        = (ejecutar-asignacion '(X = 5 + 1) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 6}]
+      )
+    )
+  )  
+)
+
+
+(deftest test-ejecutar-asignacion-se-realizan-calculos-numericos-con-redefinicion-de-variables(
+  testing "Se asigna el resultado de calcular la expresion de la derecha, incluso si reutiliza variables"
+    (is (
+        = (ejecutar-asignacion '(X = X + 1) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 5}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 6}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-se-realizan-calculos-de-strings(
+  testing "Se asigna el resultado de calcular la expresion de la derecha"
+    (is (
+        = (ejecutar-asignacion '(X$ = "HOLA" + " CHAU") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA CHAU"}]
+      )
+    )
+  )  
+)
+
+(deftest test-ejecutar-asignacion-se-realizan-calculos-de-strings-con-redefinicion-de-variables(
+  testing "Se asigna el resultado de calcular la expresion de la derecha, incluso si reutiliza variables"
+    (is (
+        = (ejecutar-asignacion '(X = X + " CHAU") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X "HOLA"}])
+        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X "HOLA CHAU"}]
+      )
+    )
+  )  
+)
+
+;======================================================

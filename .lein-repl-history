@@ -1,2 +1,6 @@
 q
 exit
+(println("hola"))
+(println('hola))
+q
+quit

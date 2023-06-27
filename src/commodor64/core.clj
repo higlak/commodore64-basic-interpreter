@@ -694,18 +694,14 @@
 )
 
 (defn alfanumerico? [x] (
-  every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (str x)
-  )
-)
-;Recibe dos simbolos y se fija si comparen los primeros dos caracteres
-(defn comparten-primeras-dos-caracteres? [x y](
-    = (take 2 (str x)) (take 2 (str y))
+  if (or (variable-string? x) (variable-integer? x)) 
+    (every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (drop-last (str x)))
+    (every? (partial contains? (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) (str x))
   )
 )
 
-;Devuelve true si el simbolo no empieza con los primeros 2 caracteres de una palabra reservada
-(defn no-empieza-con-palabra-reservada [x] (
-  not-any? (partial comparten-primeras-dos-caracteres? x) palabras-reservadas 
+(defn empiesa-con-letra [simbolo](
+    Character/isLetter (first (str simbolo))
   )
 )
 
@@ -722,14 +718,15 @@
 
 (defn nombre-variable-valido? [x](
     and
+        (empiesa-con-letra x)
         (alfanumerico? x)
-        (no-empieza-con-palabra-reservada x)
         (no-contiene-palabras-reservadas x)
   )
 )
 
 (defn simbolo-valido? [x](
     cond
+      (number? x) true
       (palabra-reservada? x) true
       (nombre-variable-valido? x) true
     :else false
@@ -1070,6 +1067,20 @@
   )
 )
 
+;Asigna al ambiante una variable con un nombre y valor
+(defn asignar [nombre valor amb](
+    vec (concat (drop-last amb) (list (assoc (last amb) nombre valor)))
+  )
+)
+
+;
+(defn obtener-parte-representativa-de-variable [var](
+    if (variable-float? var)
+      (symbol (apply str (take 2 (str var))))
+      (symbol (str (apply str (take 2 (drop-last (str var)))) (last (str var))))
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ejecutar-asignacion: recibe una asignacion y un ambiente, y
 ; retorna el ambiente actualizado al efectuar la asignacion, por
@@ -1083,16 +1094,23 @@
 ; user=> (ejecutar-asignacion '(X$ = X$ + " MUNDO") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA"}])
 ; [((10 (PRINT X))) [10 1] [] [] [] 0 {X$ "HOLA MUNDO"}]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn ejecutar-asignacion [sentencia amb]
+(defn ejecutar-asignacion [sentencia amb](
+    asignar (obtener-parte-representativa-de-variable (first sentencia)) (calcular-expresion (drop 2 sentencia) amb) amb
+  )
 )
 
-(defn reemplazar-simbolo [variables, simbolo](
-    if (not (palabra-reservada? simbolo))
-      (if (variable-string? simbolo)
-        (get variables simbolo "") 
-        (get variables simbolo 0) 
+(defn reemplazar-variables [variables, x](
+    cond 
+      (not (symbol? x)) x
+      (= x '.) 0
+    :else
+      (if (nombre-variable-valido? x)
+        (if (variable-string? x)
+          (get variables x "") 
+          (get variables x 0) 
+        )
+        x
       )
-      simbolo
   )
 )
 
@@ -1106,7 +1124,7 @@
 ; (5 + 0 / 2 * 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn preprocesar-expresion [expr amb](
-    map (partial reemplazar-simbolo (assoc (last amb) '. 0)) expr
+    map (partial reemplazar-variables (last amb)) expr
   )
 )
 
@@ -1206,7 +1224,7 @@
 ; A
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn eliminar-cero-decimal [n](
-    if (subsimbolo? n '.)
+    if (and (number? n) (subsimbolo? n '.))
       (read-string(str(apply str(
         eliminar-punto-final (reverse (eliminar-ceros-a-izquierda (reverse (str n))))
       ))))
@@ -1237,7 +1255,47 @@
 ; user=> (eliminar-cero-entero -0.5)
 ; "-.5"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn eliminar-cero-entero [n]
+(defn eliminar-cero-entero [n](
+    if (number? n)
+      (cond  
+        (neg? n)
+          (apply str (cons '- 
+            (eliminar-ceros-a-izquierda (rest (seq (str n))))
+          ))
+        (pos? n)
+          (apply str (cons " " 
+            (eliminar-ceros-a-izquierda (seq (str n)))
+          ))
+        :else
+          " 0"
+      )
+      (str n)
+  )
 )
-
 true
+
+(def ambiente ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}])
+(def expresion '(X + 2))
+
+;(calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))le
+
+(defn -main []
+
+  (println (obtener-parte-representativa-de-variable 'HOLA))
+  (println (obtener-parte-representativa-de-variable 'HOLA%))
+  (println (obtener-parte-representativa-de-variable 'HOLA$))
+  (println (obtener-parte-representativa-de-variable 'X$))
+  (println(take 2 (str 'HOLA)))
+  (println(
+    str (apply str (take 2 (str 'HOLA))) '%
+  ))
+  (println)
+  (println(preprocesar-expresion '(X + 2) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}]))
+  (println)
+
+  (println (preprocesar-expresion expresion ambiente))
+  (println (desambiguar (preprocesar-expresion expresion ambiente)))
+  (println (shunting-yard (desambiguar (preprocesar-expresion expresion ambiente))))
+  (println (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expresion ambiente))) (ambiente 1)))
+  (println(calcular-expresion '(X + 2) ambiente))
+)
