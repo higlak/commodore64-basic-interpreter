@@ -665,3 +665,78 @@
 )
 
 ;======================================================
+
+(deftest test-evaluar 
+  (testing "let asigna las variables"
+    (is (
+        = (evaluar '(LET X = 2) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
+        [:sin-errores ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}]]
+      )
+    )
+  )
+  (testing "end corta la ejecucion y mantiene el entorno"
+    (is (
+        = (evaluar '(end) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}])
+        [nil ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}]]
+      )
+    )
+  )
+)
+
+(deftest test-aplicar-desigualdad
+  (testing "> numerico"
+    (is (
+        = (aplicar '> 4 2 [15 2]) -1
+      )
+    )
+  )
+
+  (testing "< numerico"
+    (is (
+        = (aplicar '< 4 2 [15 2]) 0
+      )
+    )
+  )
+
+  (testing "<= numerico igual"
+    (is (
+        = (aplicar '<= 2 2 [15 2]) -1
+      )
+    )
+  )
+
+  (testing "<= numerico menor"
+    (is (
+        = (aplicar (symbol "<=") 2 4 [15 2]) -1
+      )
+    )
+  )
+
+   (testing ">= numerico igual"
+    (is (
+        = (aplicar '>= 2 2 [15 2]) -1
+      )
+    )
+  )
+
+  (testing ">= numerico menor"
+    (is (
+        = (aplicar '>= 2 4 [15 2]) 0
+      )
+    )
+  )
+
+  (testing "<> numerico igual"
+    (is (
+        = (aplicar '<> 2 2 [15 2]) 0
+      )
+    )
+  )
+
+  (testing "<> numerico distinto"
+    (is (
+        = (aplicar '<> 2 4 [15 2]) -1
+      )
+    )
+  )
+)

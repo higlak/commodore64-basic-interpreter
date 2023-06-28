@@ -49,6 +49,13 @@
 (declare eliminar-cero-decimal)           ; IMPLEMENTAR
 (declare eliminar-cero-entero)            ; IMPLEMENTAR
 
+(declare desigualdad-caracteres)
+(declare aplicar-desigualdad)
+
+(defn spy
+   ([x] (do (prn x) x))
+   ([msg x] (do (print msg) (print ": ") (prn x) x)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; driver-loop: el REPL del interprete de Commodore 64 BASIC V2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -429,6 +436,7 @@
 ; linea indicada
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn calcular-rpn [tokens nro-linea]
+  ;(println "tokens" tokens "n" nro-linea)
   (try
     (let [resu-redu
          (reduce
@@ -517,7 +525,7 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
-  (println sentencia)
+  ;(println sentencia)
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
       (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error  
       (case (first sentencia)
@@ -595,6 +603,8 @@
         NEXT (if (<= (count (next sentencia)) 1)
                  (retornar-al-for amb (fnext sentencia))
                   (do (dar-error 16 (amb 1)) [nil amb]))  ; Syntax error
+        LET (evaluar (rest sentencia) amb)
+        END [nil amb]
         (if (= (second sentencia) '=)
             (let [resu (ejecutar-asignacion sentencia amb)]
                  (if (nil? resu)
@@ -624,6 +634,15 @@
           = (if (and (string? operando1) (string? operando2))
                 (if (= operando1 operando2) -1 0)
                 (if (= (+ 0 operando1) (+ 0 operando2)) -1 0))
+          > (aplicar-desigualdad > operando1 operando2 nro-linea)
+          < (aplicar-desigualdad < operando1 operando2 nro-linea)
+          >= (if (neg? (+ 
+                (aplicar '= operando1 operando2 nro-linea) 
+                (aplicar-desigualdad > operando1 operando2 nro-linea))) -1 0)
+          <= (if (neg? (+ 
+                (aplicar '= operando1 operando2 nro-linea) 
+                (aplicar-desigualdad < operando1 operando2 nro-linea))) -1 0)
+          <> (if (= (aplicar '= operando1 operando2 nro-linea) -1) 0 -1)
           + (if (and (string? operando1) (string? operando2))
                 (str operando1 operando2)
                 (+ operando1 operando2))
@@ -644,6 +663,31 @@
                        :else (subs operando1 ini fin))))))
 )
 
+;Recibe 2 string y devuelve el resultado de aplicarles la desigualdad a ambos
+;Segun lo que encontre en internet, los valores son los mismos que ascii https://sta.c64.org/cbm64pet.html
+(defn desigualdad-caracteres [desigualdad operando1 operando2](
+    cond 
+      (and (empty? operando1) (empty? operando2)) 0
+      (empty? operando1) (if (desigualdad (count operando1) (count operando2)) -1 0)
+      (empty? operando2) (if (desigualdad (count operando1) (count operando2)) -1 0)
+      (= (first operando1) (first operando2)) (desigualdad-caracteres desigualdad (rest operando1) (rest operando2))
+    :else
+      (if (desigualdad (int(first operando1)) (int(first operando2))) -1 0)
+  )
+)
+
+;Aplica la desigualdad dada a los operandos y en caso de error utiliza el nro-linea.
+(defn aplicar-desigualdad [desigualdad operando1 operando2 nro-linea](
+  cond 
+    (and (string? operando1) (string? operando2))
+      (desigualdad-caracteres desigualdad operando1 operando2)
+    (and (not(string? operando1)) (not(string? operando2)))
+      (if (desigualdad (+ 0 operando1) (+ 0 operando2)) -1 0)
+    :else
+      (dar-error 163 nro-linea) ;Type mismatch error
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; A PARTIR DE ESTE PUNTO HAY QUE IMPLEMENTAR LAS FUNCIONES DADAS ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -655,12 +699,12 @@
 
 ;Devuelve un set con las sentencias de commodor
 (def sentencias-commodor
-    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT}
+    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT, LET}
 )
 
 ;Devuelve un set con los operadores de commodor
 (def operadores
-    '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, .}
+    (conj '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, .} (symbol ";"))
 )
 
 ;Devuelve un set de las palabras reservadas
@@ -744,6 +788,7 @@
 (defn simbolo-valido? [x](
     cond
       (number? x) true
+      (string? x) true
       (palabra-reservada? x) true
       (nombre-variable-valido? x) true
     :else false
@@ -1207,8 +1252,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aridad [token](
     cond
-      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD]) 1
-      (some (partial = token) '[MID$ + - * / = <> < <= > >= AND OR]) 2 
+      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD, GOTO]) 1
+      (some (partial = token) '[MID$ + - * / = <> < > <= >= AND OR]) 2 
       (= 'MID3$ token)3
     :else 0
   )
@@ -1288,31 +1333,15 @@
       )
       (str n)
   )
-)
-
+)       
 
 (def ambiente ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}])
 (def expresion '(X + 2))
 
 (defn -main []
 
+  (println  (desigualdad-caracteres < "hola" "hola"))
+  (println (anular-invalidos '(PRINT " HOLA")))
+
   (driver-loop)
-
-  (println (obtener-parte-representativa-de-variable 'HOLA))
-  (println (obtener-parte-representativa-de-variable 'HOLA%))
-  (println (obtener-parte-representativa-de-variable 'HOLA$))
-  (println (obtener-parte-representativa-de-variable 'X$))
-  (println(take 2 (str 'HOLA)))
-  (println(
-    str (apply str (take 2 (str 'HOLA))) '%
-  ))
-  (println)
-  (println(preprocesar-expresion '(X + 2) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}]))
-  (println)
-
-  (println (preprocesar-expresion expresion ambiente))
-  (println (desambiguar (preprocesar-expresion expresion ambiente)))
-  (println (shunting-yard (desambiguar (preprocesar-expresion expresion ambiente))))
-  (println (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expresion ambiente))) (ambiente 1)))
-  (println(calcular-expresion '(X + 2) ambiente))
 )
