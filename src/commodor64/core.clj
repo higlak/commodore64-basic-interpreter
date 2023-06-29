@@ -1363,26 +1363,5 @@
 (def expresion '(X + 2))
 
 (defn -main []
-
-  (println(expandir-nexts '((NEXT))))
-  (println (calcular-rpn '(1 -u) [10 1]))
-  (println)
-  (println (evaluar (list 'L '= 'ASC (symbol "(") "HOLA " (symbol ")")) ['() [10 1] [] [] [] 0 '{A 6 B 5}] ))
-  (println)
-  (println (evaluar (list 'L '= 'ASC (symbol "(") 'MID$ (symbol "(") "hola" (symbol ",") 1 (symbol ",") 1 (symbol ")") (symbol ")") '- 64) ['() [10 1] [] [] [] 0 '{A 6 B 5}] ))
-  (println)
-
-  (println (eliminar-cero-decimal 1))
-  ;(println(aplicar (list 'MID$ (symbol "(") ') [10 1]))
-
-  (println (evaluar (list 'C '= 'A '- 'INT (symbol "(") 'A '/ 'B (symbol ")") '* 'B) ['() [10 1] [] [] [] 0 '{A 6 B 5}]))
-
-  ;(println (evaluar (list 'B$ '= 'MID$ (symbol "(") 'N$ (symbol ",") 'L '- 'I '+ 1 (symbol ",") 1 (symbol ")")) ['() [10 1] [] [] [] 0 '{N$ "0011" L 4 I 1}]))
-  ;(println)
-  ;(println (anular-invalidos '(FOR I = L TO 1 STEP -1)))
-  ;(println (evaluar (list 'PRINT 'MID$ (symbol "(") 'N$ (symbol ",") 'I (symbol ")")) ['() [10 1] [] [] [] 0 '{N$ "palito" I 2}]))
-
-  ;(println  (desigualdad-caracteres < "hola" "hola"))
-  ;(println (evaluar '(PRINT " HOLA")))
   (driver-loop)
 )
