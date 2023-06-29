@@ -359,6 +359,7 @@
 ; 7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn calcular-expresion [expr amb]
+  (spy "calculado"(calcular-rpn (spy "shunt"(shunting-yard (spy "desam"(desambiguar (spy "prep"(preprocesar-expresion  (spy "expr" expr) amb)))))) (amb 1)))
   (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))
 )
 
@@ -525,7 +526,9 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
-  ;(println sentencia)
+  (println)
+  (println sentencia)
+  (println)
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
       (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error  
       (case (first sentencia)
@@ -604,6 +607,11 @@
                  (retornar-al-for amb (fnext sentencia))
                   (do (dar-error 16 (amb 1)) [nil amb]))  ; Syntax error
         LET (evaluar (rest sentencia) amb)
+        DATA [:omitir-restante amb]
+        RESTORE [:sin-errores (assoc amb 5 0)]
+        READ (leer-data (rest sentencia) amb)
+        LIST (do (mostrar-listado (first amb)) [:sin-errores amb])
+        CLEAR [:sin-errores (assoc amb 6 {})]
         END [nil amb]
         (if (= (second sentencia) '=)
             (let [resu (ejecutar-asignacion sentencia amb)]
@@ -619,15 +627,23 @@
 ; nil)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aplicar
-  ([operador operando nro-linea]
+  ([operador operando nro-linea] (println "operador " operador "operando " operando "nro" nro-linea)
     (if (nil? operando)
         (dar-error 16 nro-linea)  ; Syntax error
         (case operador
           -u (- operando)
           LEN (count operando)
           STR$ (if (not (number? operando)) (dar-error 163 nro-linea) (eliminar-cero-entero operando)) ; Type mismatch error
-          CHR$ (if (or (< operando 0) (> operando 255)) (dar-error 53 nro-linea) (str (char operando)))))) ; Illegal quantity error
-  ([operador operando1 operando2 nro-linea]
+          CHR$ (if (or (< operando 0) (> operando 255)) (dar-error 53 nro-linea) (str (char operando))) ; Illegal quantity error
+          INT (if (string? operando) (dar-error 163 nro-linea) (int operando)) ; Type mismatch error
+          ASC (if (string? operando) (int (first operando)) (dar-error 163 nro-linea)) ;Type mismatch error
+          EXP (Math/exp operando) 
+          LOG (Math/log operando)
+          SIN (Math/sin operando)
+          ATN (Math/atan operando)
+          ))) 
+
+  ([operador operando1 operando2 nro-linea] (println "operador "operador "operador1 "operando1 "operador2 " operando2 "nro" nro-linea)
     (if (or (nil? operando1) (nil? operando2))
         (dar-error 16 nro-linea)  ; Syntax error
         (case operador
@@ -648,11 +664,13 @@
                 (+ operando1 operando2))
           - (- operando1 operando2)
           / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2))  ; Division by zero error
+          * (* operando1 operando2)
           AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) -1 0))
+          OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) -1 0))
           MID$ (if (< operando2 1)
                    (dar-error 53 nro-linea)  ; Illegal quantity error
                    (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini)))))))
-  ([operador operando1 operando2 operando3 nro-linea]
+  ([operador operando1 operando2 operando3 nro-linea] (println "operador "operador "operador1 "operando1 "operador2 " operando2 "operador3 " operando3 "nro" nro-linea)
     (if (or (nil? operando1) (nil? operando2) (nil? operando3)) (dar-error 16 nro-linea)  ; Syntax error
         (case operador
           MID3$ (let [tam (count operando1), ini (dec operando2), fin (+ (dec operando2) operando3)]
@@ -694,22 +712,22 @@
 
 ;Devuelve un set con los comandos del interprete
 (def comandos-interprete 
-    '#{LOAD, SAVE, RUN}
+    '#{LOAD, SAVE, RUN, ENV, EXIT}
 )
 
 ;Devuelve un set con las sentencias de commodor
 (def sentencias-commodor
-    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT, LET}
+    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT, LET, THEN, READ, DATA, RESTORE, TO, STEP, LIST, CLEAR}
 )
 
 ;Devuelve un set con los operadores de commodor
 (def operadores
-    (conj '#{+, -, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, .} (symbol ";"))
+    (conj '#{+, -, -u, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, ., LEN, MID$, MID3$, INT, STR$, ASC, LOG, SIN, CHR$})
 )
 
 ;Devuelve un set de las palabras reservadas
 (def palabras-reservadas
-  (union comandos-interprete sentencias-commodor operadores)
+  (conj (union comandos-interprete sentencias-commodor operadores) (symbol "(")(symbol ")")(symbol ",")(symbol ";"))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -758,8 +776,14 @@
   )
 )
 
+;recibe un simbolo y verifica si su ultimo caracter es igual a x
+(defn simbolo-termina-con[x simbolo](
+    = (last (str simbolo)) (first (str x))
+  )
+)
+
 (defn variable-alfanumerica? [x] (
-  if (or (variable-string? x) (variable-integer? x)) 
+  if (or (simbolo-termina-con '% x) (simbolo-termina-con '$ x)) 
     (every? caracter-alfanumerico? (drop-last (str x)))
     (every? caracter-alfanumerico? (str x))
   )
@@ -807,7 +831,11 @@
 ; (IF X nil * Y < 12 THEN LET nil X = 0)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn anular-invalidos [sentencia] (
-  map reemplazar-simbolo-invalido sentencia
+  cond 
+    (empty? sentencia) ()
+    (= (first sentencia) 'REM) sentencia
+  :else
+    (cons (reemplazar-simbolo-invalido (first sentencia)) (anular-invalidos (rest sentencia)))
   )
 )
 
@@ -842,7 +870,7 @@
 )
 
 (defn expandir-next [n](
-    if (= (first n) 'NEXT)
+    if (and (= (first n) 'NEXT) (> (count n) 1))
       (partition 2 (replace {(symbol ","), 'NEXT} n))
       (list n)
   )
@@ -904,12 +932,6 @@
   nil
 )
 
-;recibe un simbolo y verifica si su ultimo caracter es igual a x
-(defn simbolo-termina-con[x simbolo](
-    = (last (str simbolo)) (first (str x))
-  )
-)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; variable-float?: predicado para determinar si un identificador
 ; es una variable de punto flotante, por ejemplo:
@@ -921,7 +943,7 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-float? [x](
-    and (not (variable-integer? x)) (not (variable-string? x))
+    and (nombre-variable-valido? x) (not (variable-integer? x)) (not (variable-string? x))
   )
 )
 
@@ -936,7 +958,7 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-integer? [x](
-    simbolo-termina-con '% x
+    and (nombre-variable-valido? x) (simbolo-termina-con '% x)
   )
 )
 
@@ -951,7 +973,7 @@
 ; false
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn variable-string? [x](
-    simbolo-termina-con '$ x
+    and (nombre-variable-valido? x) (simbolo-termina-con '$ x)
   )
 )
 
@@ -1131,11 +1153,16 @@
 
 ;Asigna al ambiante una variable con un nombre y valor
 (defn asignar [nombre valor amb](
-    vec (concat (drop-last amb) (list (assoc (last amb) nombre valor)))
+    cond 
+      (and (variable-integer? nombre) (not (int? valor))) (dar-error 163 (first amb))
+      (and (variable-string? nombre) (not (string? valor))) (dar-error 163 (first amb))
+      (and (variable-float? nombre) (not (number? valor))) (dar-error 163 (first amb))
+    :else
+      (vec (concat (drop-last amb) (list (assoc (last amb) nombre valor))))
   )
 )
 
-;
+;Devuelve los primeros dos caracteres de una variable, ademas del % o $segun corresponda
 (defn obtener-parte-representativa-de-variable [var](
     if (variable-float? var)
       (symbol (apply str (take 2 (str var))))
@@ -1168,8 +1195,8 @@
     :else
       (if (nombre-variable-valido? token)
         (if (variable-string? token)
-          (get variables token "") 
-          (get variables token 0) 
+          (get variables (obtener-parte-representativa-de-variable token) "") 
+          (get variables (obtener-parte-representativa-de-variable token) 0) 
         )
         token
       )
@@ -1204,7 +1231,7 @@
 ; (MID3$ ( 1 , -u 2 + K , 3 ))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn desambiguar [expr](
-    desambiguar-mid (desambiguar-mas-menos expr)
+    desambiguar-mas-menos (desambiguar-mid expr)
   )
 )
 
@@ -1224,6 +1251,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn precedencia [token](
     cond 
+      (= (symbol ",") token) 0
       (= 'OR token) 1
       (= 'AND token) 2
       (= 'NOT token) 3
@@ -1231,7 +1259,7 @@
       (some (partial = token) '[- +]) 5
       (some (partial = token) '[* /]) 6
       (= '-u token) 7
-      (some (partial = token) '[MID$ EXP]) 8
+      (some (partial = token) '[MID$ EXP LEN MID3$ INT STR$ ASC LOG SIN, ATN, CHR$]) 8
       :else nil
   )
 )
@@ -1252,9 +1280,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aridad [token](
     cond
-      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD, GOTO]) 1
+      (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD, GOTO, STR$, ASC, LOG, SIN, ATN, CHR$ -u]) 1
       (some (partial = token) '[MID$ + - * / = <> < > <= >= AND OR]) 2 
-      (= 'MID3$ token)3
+      (= 'MID3$ token) 3
     :else 0
   )
 )
@@ -1340,8 +1368,25 @@
 
 (defn -main []
 
-  (println  (desigualdad-caracteres < "hola" "hola"))
-  (println (anular-invalidos '(PRINT " HOLA")))
+  (println(expandir-nexts '((NEXT))))
+  (println (calcular-rpn '(1 -u) [10 1]))
+  (println)
+  (println (evaluar (list 'L '= 'ASC (symbol "(") "HOLA " (symbol ")")) ['() [10 1] [] [] [] 0 '{A 6 B 5}] ))
+  (println)
+  (println (evaluar (list 'L '= 'ASC (symbol "(") 'MID$ (symbol "(") "hola" (symbol ",") 1 (symbol ",") 1 (symbol ")") (symbol ")") '- 64) ['() [10 1] [] [] [] 0 '{A 6 B 5}] ))
+  (println)
 
+  (println (eliminar-cero-decimal 1))
+  ;(println(aplicar (list 'MID$ (symbol "(") ') [10 1]))
+
+  (println (evaluar (list 'C '= 'A '- 'INT (symbol "(") 'A '/ 'B (symbol ")") '* 'B) ['() [10 1] [] [] [] 0 '{A 6 B 5}]))
+
+  ;(println (evaluar (list 'B$ '= 'MID$ (symbol "(") 'N$ (symbol ",") 'L '- 'I '+ 1 (symbol ",") 1 (symbol ")")) ['() [10 1] [] [] [] 0 '{N$ "0011" L 4 I 1}]))
+  ;(println)
+  ;(println (anular-invalidos '(FOR I = L TO 1 STEP -1)))
+  ;(println (evaluar (list 'PRINT 'MID$ (symbol "(") 'N$ (symbol ",") 'I (symbol ")")) ['() [10 1] [] [] [] 0 '{N$ "palito" I 2}]))
+
+  ;(println  (desigualdad-caracteres < "hola" "hola"))
+  ;(println (evaluar '(PRINT " HOLA")))
   (driver-loop)
 )

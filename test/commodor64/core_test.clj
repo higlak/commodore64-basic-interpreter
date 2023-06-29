@@ -647,8 +647,8 @@
 (deftest test-ejecutar-asignacion-se-realizan-calculos-de-strings(
   testing "Se asigna el resultado de calcular la expresion de la derecha"
     (is (
-        = (ejecutar-asignacion '(X$ = "HOLA" + " CHAU") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{}])
-        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X$ "HOLA CHAU"}]
+        = (ejecutar-asignacion '(X$ = "HOLA" + " CHAU") ['((10 (PRINT X$))) [10 1] [] [] [] 0 '{}])
+        ['((10 (PRINT X$))) [10 1] [] [] [] 0 '{X$ "HOLA CHAU"}]
       )
     )
   )  
@@ -657,8 +657,8 @@
 (deftest test-ejecutar-asignacion-se-realizan-calculos-de-strings-con-redefinicion-de-variables(
   testing "Se asigna el resultado de calcular la expresion de la derecha, incluso si reutiliza variables"
     (is (
-        = (ejecutar-asignacion '(X = X + " CHAU") ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X "HOLA"}])
-        ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X "HOLA CHAU"}]
+        = (ejecutar-asignacion '(X$ = X$ + " CHAU") ['((10 (PRINT X$))) [10 1] [] [] [] 0 '{X$ "HOLA"}])
+        ['((10 (PRINT X$))) [10 1] [] [] [] 0 '{X$ "HOLA CHAU"}]
       )
     )
   )  
@@ -676,13 +676,14 @@
   )
   (testing "end corta la ejecucion y mantiene el entorno"
     (is (
-        = (evaluar '(end) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}])
+        = (evaluar '(END) ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}])
         [nil ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 2}]]
       )
     )
   )
 )
 
+;======================================================
 (deftest test-aplicar-desigualdad
   (testing "> numerico"
     (is (
@@ -739,4 +740,40 @@
       )
     )
   )
+)
+
+(deftest aplicar-STR
+  (testing "Si se aplica sobre un numero devuelve su string"
+    (is (
+        = (aplicar 'STR$ 50 [10 1] )
+        " 50"
+      )
+    )
+  )
+   
+  (testing "Si se aplica sobre un string deuelve nil"
+    (is (
+        = (aplicar 'STR$ "hola" [10 1] )
+        nil
+      )
+    )
+  )  
+)
+
+(deftest aplicar-ASC
+  (testing "Si se aplica sobre un numero devuelve devuelve nil"
+    (is (
+        = (aplicar 'ASC 50 [10 1] )
+        nil
+      )
+    )
+  )
+   
+  (testing "Si se aplica sobre un string deuelve el codigo ascii del primero"
+    (is (
+        = (aplicar 'ASC "hola" [10 1] )
+        (int (first "hola"))
+      )
+    )
+  )  
 )
