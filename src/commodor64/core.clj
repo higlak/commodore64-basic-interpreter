@@ -359,7 +359,6 @@
 ; 7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn calcular-expresion [expr amb]
-  (spy "calculado"(calcular-rpn (spy "shunt"(shunting-yard (spy "desam"(desambiguar (spy "prep"(preprocesar-expresion  (spy "expr" expr) amb)))))) (amb 1)))
   (calcular-rpn (shunting-yard (desambiguar (preprocesar-expresion expr amb))) (amb 1))
 )
 
@@ -526,9 +525,6 @@
 ; actualizado
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn evaluar [sentencia amb]
-  (println)
-  (println sentencia)
-  (println)
   (if (or (contains? (set sentencia) nil) (and (palabra-reservada? (first sentencia)) (= (second sentencia) '=)))
       (do (dar-error 16 (amb 1)) [nil amb])  ; Syntax error  
       (case (first sentencia)
@@ -627,7 +623,7 @@
 ; nil)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn aplicar
-  ([operador operando nro-linea] (println "operador " operador "operando " operando "nro" nro-linea)
+  ([operador operando nro-linea]
     (if (nil? operando)
         (dar-error 16 nro-linea)  ; Syntax error
         (case operador
@@ -643,7 +639,7 @@
           ATN (Math/atan operando)
           ))) 
 
-  ([operador operando1 operando2 nro-linea] (println "operador "operador "operador1 "operando1 "operador2 " operando2 "nro" nro-linea)
+  ([operador operando1 operando2 nro-linea]
     (if (or (nil? operando1) (nil? operando2))
         (dar-error 16 nro-linea)  ; Syntax error
         (case operador
@@ -670,7 +666,7 @@
           MID$ (if (< operando2 1)
                    (dar-error 53 nro-linea)  ; Illegal quantity error
                    (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini)))))))
-  ([operador operando1 operando2 operando3 nro-linea] (println "operador "operador "operador1 "operando1 "operador2 " operando2 "operador3 " operando3 "nro" nro-linea)
+  ([operador operando1 operando2 operando3 nro-linea] 
     (if (or (nil? operando1) (nil? operando2) (nil? operando3)) (dar-error 16 nro-linea)  ; Syntax error
         (case operador
           MID3$ (let [tam (count operando1), ini (dec operando2), fin (+ (dec operando2) operando3)]
@@ -722,7 +718,7 @@
 
 ;Devuelve un set con los operadores de commodor
 (def operadores
-    (conj '#{+, -, -u, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, ., LEN, MID$, MID3$, INT, STR$, ASC, LOG, SIN, CHR$})
+    (conj '#{+, -, -u, *, /, =, <>, <, <=, >, >=, AND, OR, EXP, ., LEN, MID$, MID3$, INT, STR$, ASC, LOG, SIN, ATN, CHR$})
 )
 
 ;Devuelve un set de las palabras reservadas
