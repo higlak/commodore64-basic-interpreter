@@ -633,10 +633,10 @@
           CHR$ (if (or (< operando 0) (> operando 255)) (dar-error 53 nro-linea) (str (char operando))) ; Illegal quantity error
           INT (if (string? operando) (dar-error 163 nro-linea) (int operando)) ; Type mismatch error
           ASC (if (string? operando) (int (first operando)) (dar-error 163 nro-linea)) ;Type mismatch error
-          EXP (Math/exp operando) 
-          LOG (Math/log operando)
-          SIN (Math/sin operando)
-          ATN (Math/atan operando)
+          EXP (float(Math/exp operando))
+          LOG (float(Math/log operando))
+          SIN (float (Math/sin operando))
+          ATN (float(Math/atan operando))
           ))) 
 
   ([operador operando1 operando2 nro-linea]
@@ -659,7 +659,7 @@
                 (str operando1 operando2)
                 (+ operando1 operando2))
           - (- operando1 operando2)
-          / (if (= operando2 0) (dar-error 133 nro-linea) (/ operando1 operando2))  ; Division by zero error
+          / (if (= operando2 0) (dar-error 133 nro-linea) (float(/ operando1 operando2)))  ; Division by zero error
           * (* operando1 operando2)
           AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) -1 0))
           OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) -1 0))
@@ -829,7 +829,7 @@
 (defn anular-invalidos [sentencia] (
   cond 
     (empty? sentencia) ()
-    (= (first sentencia) 'REM) sentencia
+    (or (= (first sentencia) 'REM) (= (first sentencia) 'LOAD)) sentencia
   :else
     (cons (reemplazar-simbolo-invalido (first sentencia)) (anular-invalidos (rest sentencia)))
   )
@@ -1357,10 +1357,7 @@
       )
       (str n)
   )
-)       
-
-(def ambiente ['((10 (PRINT X))) [10 1] [] [] [] 0 '{X 3}])
-(def expresion '(X + 2))
+)
 
 (defn -main []
   (driver-loop)
