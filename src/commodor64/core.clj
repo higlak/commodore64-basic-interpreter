@@ -663,6 +663,7 @@
           * (* operando1 operando2)
           AND (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (and (not= op1 0) (not= op2 0)) -1 0))
           OR (let [op1 (+ 0 operando1), op2 (+ 0 operando2)] (if (or (not= op1 0) (not= op2 0)) -1 0))
+          LEFT$ (if (and (string? operando1) (int? operando2)) (apply str(take operando2 operando1)) (dar-error 163 nro-linea))
           MID$ (if (< operando2 1)
                    (dar-error 53 nro-linea)  ; Illegal quantity error
                    (let [ini (dec operando2)] (if (>= ini (count operando1)) "" (subs operando1 ini)))))))
@@ -713,7 +714,7 @@
 
 ;Devuelve un set con las sentencias de commodor
 (def sentencias-commodor
-    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT, LET, THEN, READ, DATA, RESTORE, TO, STEP, LIST, CLEAR}
+    '#{PRINT, REM, NEW, GOTO, IF, INPUT, ON, GOSUB, RETURN, FOR, NEXT, LET, THEN, READ, DATA, RESTORE, TO, STEP, LIST, CLEAR, LEFT$}
 )
 
 ;Devuelve un set con los operadores de commodor
@@ -1255,7 +1256,7 @@
       (some (partial = token) '[- +]) 5
       (some (partial = token) '[* /]) 6
       (= '-u token) 7
-      (some (partial = token) '[MID$ EXP LEN MID3$ INT STR$ ASC LOG SIN, ATN, CHR$]) 8
+      (some (partial = token) '[MID$ EXP LEN MID3$ INT STR$ ASC LOG SIN, ATN, CHR$, LEFT$]) 8
       :else nil
   )
 )
@@ -1277,7 +1278,7 @@
 (defn aridad [token](
     cond
       (some (partial = token) '[ATN INT SIN EXP LOG LEN ASC CHR$ STR$, LOAD, GOTO, STR$, ASC, LOG, SIN, ATN, CHR$ -u]) 1
-      (some (partial = token) '[MID$ + - * / = <> < > <= >= AND OR]) 2 
+      (some (partial = token) '[MID$ + - * / = <> < > <= >= AND OR, LEFT$]) 2 
       (= 'MID3$ token) 3
     :else 0
   )

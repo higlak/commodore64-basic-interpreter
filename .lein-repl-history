@@ -6,3 +6,5 @@ q
 quit
 q
 quit
+(Math/sin 4)
+exit
