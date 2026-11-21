@@ -1,44 +1,24 @@
-# commodor64
+# Commodore 64 BASIC interpreter
 
-FIXME: description
+An interpreter for **Commodore 64 BASIC V2**, written in Clojure in a purely functional style. It runs classic line-numbered BASIC programs from an interactive prompt.
 
-## Installation
+Built for *Lenguajes Formales* (FIUBA, University of Buenos Aires), 2023. The course provided the interpreter's skeleton: the REPL loop, the shunting-yard evaluator and file loading. My work was implementing the core functions it relies on.
 
-Download from http://example.com/FIXME.
+## What I implemented
 
-## Usage
+- **Lexical validation:** reserved words, operators, rejecting invalid tokens, and typing variables as float, integer (`%`) or string (`$`).
+- **Program loading:** inserting and replacing numbered lines, expanding multi-variable `NEXT`, counting statements, and finding where execution continues after `GOTO`/`GOSUB`/`RETURN`.
+- **Execution:** assignments, reading `DATA`, and BASIC-style error messages.
+- **Expressions:** preprocessing (variable substitution), telling unary from binary `+`/`-` and the 2- and 3-argument `MID$`, operator precedence and arity, and C64-style number formatting.
+- A test suite of 21 test groups and 83 assertions.
 
-FIXME: explanation
+## Running it
 
-    $ java -jar commodor64-0.1.0-standalone.jar [args]
+Requires [Leiningen](https://leiningen.org/).
 
-## Options
+```sh
+lein run     # starts the BASIC prompt
+lein test    # runs the test suite
+```
 
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2023 FIXME
-
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
-
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+Sample programs are included: `FIBO.BAS`, `PRIMES.BAS`, `GCD.BAS`, `BIN-DEC.BAS`, `HEX.BAS`, `SINE.BAS`, `STARS.BAS`, `NATO.BAS`, `NAME.BAS`, `SUM.BAS`.
